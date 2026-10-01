@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador Ciclo Completo · Rural Bioenergia</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f3f4f0;--card:#ffffff;--brd:#e1e5dd;
+  --txt:#1b2a22;--txt2:#56665d;--txt3:#7d8a82;
+  --pri:#1d4a37;--pri2:#2a6049;--side:#1d4a37;
+  --gold:#d6ad45;--eyebrow:#8a6a1c;
+  --grn:#2e7d4f;--red:#b3343f;--gld:#9a7316;--blu3:#2f6f8f;
+  --in-bg:#f7f8f5;--row:#f5f6f2;--base:#e6efe8;
+  --pos-bg:#e3f1e7;--pos-bd:#9fcdb0;--neg-bg:#f9e4e4;--neg-bd:#e3a7ab;--warn-bg:#fbf1d9;--warn-bd:#e5cf8f;
+  --m1-bg:#e1efe5;--m1:#2b6a43;--m2-bg:#f0f6f1;--m2:#4d7c5d;--m3-bg:#fbf5e6;--m3:#8a6a1c;--m4-bg:#f9e9e9;--m4:#9a3a41;
+  --shadow:0 1px 3px rgba(20,40,30,.06);
+  --font:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+:root[data-theme="dark"]{
+  --bg:#0f1714;--card:#16201c;--brd:#26332d;
+  --txt:#e3ebe6;--txt2:#a3b3aa;--txt3:#7f9087;
+  --pri:#2a6049;--pri2:#347359;--side:#12261d;
+  --eyebrow:#d4b25a;
+  --grn:#5cbf83;--red:#e57a80;--gld:#e0bb52;--blu3:#6fb3d2;
+  --in-bg:#101915;--row:#1b2621;--base:#1f3329;
+  --pos-bg:#173326;--pos-bd:#2f6b4a;--neg-bg:#3a1c1f;--neg-bd:#7a3036;--warn-bg:#3a2f12;--warn-bd:#7a6324;
+  --m1-bg:#1d4a31;--m1:#8fe0ad;--m2-bg:#18352a;--m2:#a8d8b4;--m3-bg:#3a2f12;--m3:#e0bb52;--m4-bg:#4a1d21;--m4:#f19aa0;
+  --shadow:none;
+}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:15px;min-height:100vh;font-variant-numeric:tabular-nums}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+input[type=number]{-moz-appearance:textfield}
+
+/* ===== Layout ===== */
+.app{display:flex;min-height:100vh}
+.side{width:270px;flex-shrink:0;background:var(--side);color:#fff;padding:24px 18px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{display:flex;gap:12px;align-items:center;padding-bottom:20px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.14)}
+.logo{width:50px;height:50px;border-radius:10px;background:var(--gold);color:#5a3d0a;font-weight:800;display:grid;place-items:center;font-size:17px;flex-shrink:0}
+.bt{font-weight:700;font-size:17px;line-height:1.2}
+.bs{font-size:13px;color:rgba(255,255,255,.72);margin-top:2px}
+.navlist{display:flex;flex-direction:column;gap:4px}
+.nb{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;color:#fff;font-family:var(--font);font-weight:600;font-size:15px;padding:12px 14px;border-radius:10px;cursor:pointer;text-align:left}
+.nb .ic{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.1);display:grid;place-items:center;font-size:12px;font-weight:800;flex-shrink:0}
+.nb:hover{background:rgba(255,255,255,.08)}
+.nb.active{background:#fff;color:var(--side)}
+.nb.active .ic{background:#f3ead2;color:#8a6a1c}
+.sfoot{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.14);font-size:13px;color:rgba(255,255,255,.78);display:flex;align-items:center;gap:8px}
+.sfoot .dot{width:8px;height:8px;border-radius:50%;background:#5cbf83;flex-shrink:0}
+.main{flex:1;min-width:0}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 30px;background:var(--card);border-bottom:1px solid var(--brd);position:sticky;top:0;z-index:50}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.8px;color:var(--eyebrow);text-transform:uppercase}
+.ptitle{font-size:22px;font-weight:700;color:var(--txt);margin-top:2px}
+.hbtns{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hind{font-size:13px;color:var(--grn);font-weight:700}
+.btn{background:var(--card);border:1px solid var(--brd);color:var(--txt);font-family:var(--font);font-weight:600;font-size:14.5px;padding:10px 16px;border-radius:9px;cursor:pointer}
+.btn:hover{border-color:var(--pri)}
+.btn.pri{background:var(--pri);color:#fff;border-color:var(--pri)}
+.btn.pri:hover{background:var(--pri2)}
+.pg{display:none;padding:20px 30px;max-width:1260px}
+.pg.active{display:block}
+
+/* ===== Cards ===== */
+.card{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:16px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.acc{border-right:4px solid var(--pri)}
+.acc-g{border-right:4px solid var(--grn)}.acc-r{border-right:4px solid var(--red)}.acc-y{border-right:4px solid var(--gold)}.acc-b{border-right:4px solid var(--blu3)}
+.ct{font-size:12px;font-weight:700;color:var(--eyebrow);letter-spacing:.6px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ct .sub{font-size:12px;color:var(--txt3);font-weight:600;letter-spacing:0;text-transform:none}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.g2>*,.g3>*,.g4>*{min-width:0}
+.g3.kg{gap:0 14px}
+.bw input[type=number]{width:100%}
+
+/* ===== Campos ===== */
+.fld{margin-bottom:9px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;align-items:end}
+.fg2>*{min-width:0}
+.fld label{display:block;font-size:12px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.bw{display:flex;align-items:stretch}
+.bp{background:var(--pri);border:1px solid var(--pri);color:#fff;font-size:18px;font-weight:700;padding:0 13px;cursor:pointer;flex-shrink:0;line-height:1;font-family:var(--font)}
+.bp:first-child{border-radius:8px 0 0 8px}
+.bp:last-child{border-radius:0 8px 8px 0}
+.bp:hover{background:var(--pri2)}
+.bw input[type=number]{flex:1;background:var(--in-bg);border:1px solid var(--brd);border-left:none;border-right:none;padding:7px 10px;color:var(--txt);font-size:16px;font-weight:700;outline:none;min-width:0;border-radius:0;font-family:var(--font)}
+.bw input[type=number]:focus{background:var(--card);box-shadow:inset 0 0 0 2px var(--pri)}
+.modal-sel{display:flex;gap:8px}
+.msbtn{flex:1;border:1px solid var(--brd);border-radius:9px;padding:9px 10px;font-size:14px;font-weight:700;cursor:pointer;background:var(--in-bg);color:var(--txt2);text-align:center;font-family:var(--font)}
+.msbtn.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.ibox{background:var(--row);border-radius:8px;padding:7px 12px;margin-bottom:9px;font-size:14px;color:var(--txt2);border-left:3px solid var(--gold)}
+.ibox strong{color:var(--txt)}
+.mctl{display:grid;grid-template-columns:repeat(3,minmax(0,220px)) auto;gap:12px;align-items:end;margin-bottom:6px}
+.mnote{font-size:13px;color:var(--txt3);margin-bottom:10px}
+.mnote.alt{color:var(--gld)}
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:var(--row);border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:14px;color:var(--txt2)}
+.chip b{color:var(--txt);font-size:15px}
+.chip small{color:var(--txt3);font-size:12px}
+
+/* ===== KPIs ===== */
+.kpi{margin-bottom:9px}
+.kl{font-size:12px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.kv{font-weight:600;font-size:18px;color:var(--txt)}
+.kv.sm{font-size:16px}.kv.md{font-size:18px}.kv.lg{font-size:22px}.kv.xl{font-size:24px}
+.gn{color:var(--grn)!important}.rd{color:var(--red)!important}.gd{color:var(--gld)!important}.bl{color:var(--blu3)!important}.mt{color:var(--txt3)!important}
+.rw{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--brd);font-size:15px}
+.rw:last-child{border-bottom:none}
+.rl{color:var(--txt2)}.rv{font-weight:600;color:var(--txt)}
+.hr{height:1px;background:var(--brd);margin:10px 0}
+.abox{border-radius:9px;padding:12px 14px;margin-top:6px;border:1px solid var(--brd)}
+.pos{background:var(--pos-bg);border-color:var(--pos-bd)!important}
+.neg{background:var(--neg-bg);border-color:var(--neg-bd)!important}
+.warn{background:var(--warn-bg);border-color:var(--warn-bd)!important}
+.bebox{background:var(--row);border:1px solid var(--brd);border-radius:12px;padding:16px;text-align:center;margin-bottom:12px}
+.benum{font-size:28px;font-weight:700;color:var(--txt);margin:4px 0}
+.vbox{margin-top:12px;padding:13px;border-radius:9px;text-align:center;border:1px solid var(--brd)}
+.zona{position:relative;height:44px;border-radius:9px;overflow:hidden;background:var(--row);margin:12px 0;border:1px solid var(--brd)}
+.zona .lbl{font-size:12px;font-weight:600}
+.zona .pin{background:var(--txt);color:var(--card);font-size:12px;font-weight:600;padding:3px 7px;border-radius:5px;white-space:nowrap}
+
+/* ===== Linhas de sensibilidade ===== */
+.shead,.srow{display:grid;grid-template-columns:1.3fr 1fr .6fr;gap:6px;padding:8px 10px;font-size:14.5px}
+.shead{font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--brd);margin-bottom:6px}
+.srow{border-radius:7px;margin-bottom:3px;background:var(--row);border:1px solid transparent;font-weight:500}
+.srow.base{background:var(--base);border-color:var(--pri)}
+.shead.c4,.srow.c4{grid-template-columns:1.2fr 1fr 1fr 1fr}
+.r{text-align:right}
+
+/* ===== Matriz ===== */
+.mat-wrap{overflow-x:auto}
+.mat{border-collapse:collapse;font-size:13.5px;width:100%}
+.mat th{padding:8px 8px;text-align:center;font-weight:600;font-size:13px;background:var(--pri);color:#fff;white-space:nowrap}
+.mat th small{display:block;font-weight:400;font-size:11.5px;color:rgba(255,255,255,.75)}
+.mat th.gor{text-align:left;min-width:120px}
+.mat th.isb{color:#f5d36b}
+.mat td.pgor{color:var(--txt);font-weight:600;padding:7px 9px;white-space:nowrap;background:var(--row);border-right:1px solid var(--brd)}
+.mat td.ppct{font-size:12.5px;font-weight:500;padding:6px 7px;background:var(--row);border-right:1px solid var(--brd);white-space:nowrap}
+.mat tr.brow td.pgor,.mat tr.brow td.ppct{background:var(--base)}
+.mat td.val{padding:7px 9px;text-align:right;font-weight:600;border:2px solid var(--card);min-width:84px}
+.mat td.val.isb{outline:2px solid var(--txt2);outline-offset:-2px}
+.m1{background:var(--m1-bg);color:var(--m1)}.m2{background:var(--m2-bg);color:var(--m2)}.m3{background:var(--m3-bg);color:var(--m3)}.m4{background:var(--m4-bg);color:var(--m4)}
+.leg{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:13px;font-weight:700}
+.leg span{display:flex;align-items:center;gap:6px}
+.leg i{width:14px;height:14px;border-radius:3px;display:inline-block}
+
+/* ===== Barras ===== */
+.flr{display:flex;align-items:center;gap:12px;margin-bottom:7px}
+.fll{font-size:14px;color:var(--txt2);width:270px;flex-shrink:0}
+.fll.ft{color:var(--txt);font-weight:600}
+.flb{flex:1;height:26px;background:var(--row);border-radius:5px;overflow:hidden}
+.fli{height:100%;display:flex;align-items:center;padding:0 8px;font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap}
+.fli.p{background:#6fa784}.fli.n{background:#c7868b}
+.flv{font-size:14.5px;font-weight:600;min-width:100px;text-align:right}
+.fbox{border-radius:10px;padding:14px 10px;border:1px solid var(--brd);text-align:center}
+.fbox .t{font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;margin-bottom:4px}
+.fbox .v{font-size:20px;font-weight:600;color:var(--txt)}
+.fbox .u{font-size:12px;color:var(--txt3);margin-top:2px}
+
+@media(max-width:700px){.g2,.g3,.mctl{grid-template-columns:1fr}.g3.kg{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.fg2,.g4{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .app{display:block}
+  .side{position:static;width:100%;height:auto;padding:12px 16px}
+  .brand{padding-bottom:10px;margin-bottom:10px}
+  .navlist{flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:4px}
+  .nb{width:auto;white-space:nowrap;font-size:14.5px;padding:9px 12px}
+  .sfoot{display:none}
+  .top{position:static;padding:14px 16px}
+  .pg{padding:16px}
+  .g4{grid-template-columns:1fr 1fr}
+  .mctl{grid-template-columns:1fr 1fr}
+  .fll{width:130px}.vrow .vl{min-width:0;flex:1}.vrow .vn{min-width:70px}
+  .flv{min-width:80px}
+}
+
+
+select{background:var(--in-bg);border:1px solid var(--brd);color:var(--txt);padding:8px 10px;border-radius:8px;font-size:15px;font-weight:600;width:100%;outline:none;font-family:var(--font)}
+.sub2{font-size:12px;color:var(--txt3);margin-top:2px}
+.opt{border:1px solid var(--brd);border-radius:10px;padding:14px 16px;background:var(--card)}
+.opt.best{border-color:var(--pri);box-shadow:inset 0 0 0 1px var(--pri)}
+.opt .ot{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:10px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.tag{font-size:11px;font-weight:700;background:var(--base);color:var(--pri);border-radius:5px;padding:2px 7px;text-transform:uppercase;letter-spacing:.4px}
+.narr{font-size:14px;color:var(--txt2);margin-top:12px;line-height:1.5}
+.shead.c4,.srow.c4{grid-template-columns:1.3fr 1fr 1fr .8fr}
+.fsteps{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}
+.fsteps .st{flex:1;min-width:130px;text-align:center}
+.fsteps .ar{font-size:22px;color:var(--txt3);padding-top:24px}
+.fsteps .nt{font-size:12.5px;color:var(--txt2);margin-top:3px;font-weight:600}
+.fsteps .sb{font-size:12px;color:var(--txt3);margin-top:4px}
+.ab-ok{color:var(--grn)!important}.ab-at{color:var(--gld)!important}.ab-pe{color:var(--red)!important}
+@media(max-width:700px){.fsteps .ar{display:none}}
+
+</style>
+</head>
+<body>
+<div class="app">
+
+<aside class="side">
+  <div class="brand">
+    <div class="logo">RB</div>
+    <div><div class="bt">Ciclo Completo</div><div class="bs">Rural Bioenergia</div></div>
+  </div>
+  <nav class="navlist">
+    <button class="nb active" data-pg="global" onclick="nav('global')"><span class="ic">G</span>Global</button>
+    <button class="nb" data-pg="bezerro" onclick="nav('bezerro')"><span class="ic">B</span>Bezerro</button>
+    <button class="nb" data-pg="recria" onclick="nav('recria')"><span class="ic">R</span>Recria</button>
+    <button class="nb" data-pg="conf" onclick="nav('conf')"><span class="ic">C</span>Confinamento</button>
+    <button class="nb" data-pg="resultado" onclick="nav('resultado')"><span class="ic">$</span>Resultado</button>
+  </nav>
+  <div class="sfoot"><span class="dot"></span><span id="sfoot_txt">Dados salvos neste computador</span></div>
+</aside>
+
+<div class="main">
+<header class="top">
+  <div>
+    <div class="eyebrow">Bezerro · Recria · Confinamento</div>
+    <div class="ptitle" id="ptitle">Parâmetros Globais</div>
+  </div>
+  <div class="hbtns">
+    <span class="hind" id="hind"></span>
+    <button class="btn" id="btn_tema" onclick="toggleTema()">🌙 Tema Escuro</button>
+    <button class="btn" onclick="salvar()">Salvar</button>
+    <button class="btn" onclick="resetar()">Reset</button>
+    <button class="btn pri" onclick="gerarPDF()">PDF</button>
+  </div>
+</header>
+
+<!-- GLOBAL -->
+<div id="pg-global" class="pg active">
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Mercado e capital</div>
+      <div class="fg2"><div class="fld"><label>Câmbio (₲/US$)</label><div class="bw"><button class="bp" onclick="adj('g_cambio',-50)">−</button><input type="number" id="g_cambio" value="6200" step="50" oninput="calc()"><button class="bp" onclick="adj('g_cambio',50)">+</button></div></div><div class="fld"><label>Preço gordo (US$/kg carc)</label><div class="bw"><button class="bp" onclick="adj('g_pg',-0.05)">−</button><input type="number" id="g_pg" value="5.10" step="0.05" oninput="calc()"><button class="bp" onclick="adj('g_pg',0.05)">+</button></div></div></div>
+      <div class="fg2"><div class="fld"><label>Juros anual (%)</label><div class="bw"><button class="bp" onclick="adj('g_juros',-0.5)">−</button><input type="number" id="g_juros" value="7" step="0.5" oninput="calc()"><button class="bp" onclick="adj('g_juros',0.5)">+</button></div></div><div class="fld"><label>TMA (% a.a.)</label><div class="bw"><button class="bp" onclick="adj('g_tma',-0.5)">−</button><input type="number" id="g_tma" value="8" step="0.5" oninput="calc()"><button class="bp" onclick="adj('g_tma',0.5)">+</button></div></div></div>
+      <div class="fg2"><div class="fld"><label>Mortalidade recria (%)</label><div class="bw"><button class="bp" onclick="adj('g_mr',-0.1)">−</button><input type="number" id="g_mr" value="1.5" step="0.1" oninput="calc()"><button class="bp" onclick="adj('g_mr',0.1)">+</button></div></div><div class="fld"><label>Mortalidade conf. (%)</label><div class="bw"><button class="bp" onclick="adj('g_mc',-0.1)">−</button><input type="number" id="g_mc" value="0.5" step="0.1" oninput="calc()"><button class="bp" onclick="adj('g_mc',0.1)">+</button></div></div></div>
+      <div class="ibox">Juros = custo do capital no lucro. TMA = taxa usada no VPL.</div>
+    </div>
+    <div class="card">
+      <div class="ct">Entrada do confinamento</div>
+      <div class="fld"><label>Origem do animal</label>
+        <select id="g_tipo" onchange="tipoChange()">
+          <option value="proprio">Próprio (saída da recria)</option>
+          <option value="compra">Compra direta (recriado)</option>
+          <option value="misto">Misto (próprio + compra)</option>
+        </select>
+      </div>
+      <div id="g_mf"><div class="fld"><label>% próprio no misto</label><div class="bw"><button class="bp" onclick="adj('g_misto',-5)">−</button><input type="number" id="g_misto" value="60" step="5" oninput="calc()"><button class="bp" onclick="adj('g_misto',5)">+</button></div></div></div>
+      <div id="g_cf">
+        <div class="fg2"><div class="fld"><label>Peso compra direta (kg)</label><div class="bw"><button class="bp" onclick="adj('g_cdp',-5)">−</button><input type="number" id="g_cdp" value="380" step="5" oninput="calc()"><button class="bp" onclick="adj('g_cdp',5)">+</button></div></div><div class="fld"><label>Preço compra (US$/kg PV)</label><div class="bw"><button class="bp" onclick="adj('g_cdpr',-0.05)">−</button><input type="number" id="g_cdpr" value="3.20" step="0.05" oninput="calc()"><button class="bp" onclick="adj('g_cdpr',0.05)">+</button></div></div></div>
+        <div class="fld"><label>Frete + comissão compra (US$/cab)</label><div class="bw"><button class="bp" onclick="adj('g_cdf',-1)">−</button><input type="number" id="g_cdf" value="25" step="1" oninput="calc()"><button class="bp" onclick="adj('g_cdf',1)">+</button></div></div>
+      </div>
+      <div class="ibox" id="g_info">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- BEZERRO -->
+<div id="pg-bezerro" class="pg">
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Compra do bezerro</div>
+      <div class="fg2">
+        <div class="fld"><label>Raça</label><select id="b_raca" onchange="calc()"><option value="zebu">Zebu</option><option value="hibrido">Híbrido</option></select></div>
+        <div class="fld"><label>Peso de entrada (kg)</label><div class="bw"><button class="bp" onclick="adj('b_peso',-5)">−</button><input type="number" id="b_peso" value="180" step="5" oninput="calc()"><button class="bp" onclick="adj('b_peso',5)">+</button></div></div>
+      </div>
+      <div class="fld"><label>Preço de compra (₲/kg PV)</label><div class="bw"><button class="bp" onclick="adj('b_pyg',-250)">−</button><input type="number" id="b_pyg" value="19000" step="250" oninput="calc()"><button class="bp" onclick="adj('b_pyg',250)">+</button></div></div>
+      <div class="ibox">= <strong id="b_usd">—</strong> US$/kg PV</div>
+      <div class="fg2"><div class="fld"><label>Frete (US$/cab)</label><div class="bw"><button class="bp" onclick="adj('b_frete',-1)">−</button><input type="number" id="b_frete" value="15" step="1" oninput="calc()"><button class="bp" onclick="adj('b_frete',1)">+</button></div></div><div class="fld"><label>Comissão (US$/cab)</label><div class="bw"><button class="bp" onclick="adj('b_com',-1)">−</button><input type="number" id="b_com" value="10" step="1" oninput="calc()"><button class="bp" onclick="adj('b_com',1)">+</button></div></div></div>
+      <div class="fld"><label>Veterinário entrada (US$/cab)</label><div class="bw"><button class="bp" onclick="adj('b_vet',-1)">−</button><input type="number" id="b_vet" value="5" step="1" oninput="calc()"><button class="bp" onclick="adj('b_vet',1)">+</button></div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Custo de entrada</div>
+      <div class="kpi"><div class="kl">Custo do animal (peso × preço)</div><div class="kv md" id="b_animal">—</div></div>
+      <div class="hr"></div>
+      <div class="rw"><span class="rl">+ Frete</span><span class="rv" id="b_of">—</span></div><div class="rw"><span class="rl">+ Comissão</span><span class="rv" id="b_oc">—</span></div><div class="rw"><span class="rl">+ Veterinário</span><span class="rv" id="b_ov">—</span></div>
+      <div class="hr"></div>
+      <div class="kpi"><div class="kl">Custo total de entrada</div><div class="kv lg" id="b_total">—</div></div>
+      <div class="kpi"><div class="kl">Custo/kg de entrada</div><div class="kv sm" id="b_ckg">—</div></div>
+      <div class="hr"></div>
+      <div class="kl" style="margin-bottom:6px">Ágio sobre o preço do gordo (base carcaça)</div>
+      <div class="abox" id="b_abox">
+        <div class="kv lg" id="b_aval">—</div>
+        <div style="font-size:14px;font-weight:600;margin-top:2px" id="b_albl">—</div>
+        <div style="font-size:13px;margin-top:3px;color:var(--txt2)" id="b_adet">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECRIA -->
+<div id="pg-recria" class="pg">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="ct">Recria a pasto</div>
+        <div class="fg2"><div class="fld"><label>GMD (kg/dia)</label><div class="bw"><button class="bp" onclick="adj('r_gmd',-0.01)">−</button><input type="number" id="r_gmd" value="0.490" step="0.01" oninput="calc()"><button class="bp" onclick="adj('r_gmd',0.01)">+</button></div></div><div class="fld"><label>Período (dias)</label><div class="bw"><button class="bp" onclick="adj('r_dias',-10)">−</button><input type="number" id="r_dias" value="400" step="10" oninput="calc()"><button class="bp" onclick="adj('r_dias',10)">+</button></div></div></div>
+        <div class="fld"><label>Preço de venda do magro (US$/kg PV)</label><div class="bw"><button class="bp" onclick="adj('r_pv',-0.05)">−</button><input type="number" id="r_pv" value="3.00" step="0.05" oninput="calc()"><button class="bp" onclick="adj('r_pv',0.05)">+</button></div></div>
+      </div>
+      <div class="card">
+        <div class="ct">Custos (US$/cab/mês) <span class="sub">total = soma dos itens</span></div>
+        <div class="fg2"><div class="fld"><label>Salários e encargos</label><div class="bw"><button class="bp" onclick="adj('r_sal',-0.05)">−</button><input type="number" id="r_sal" value="0.98" step="0.05" oninput="calc()"><button class="bp" onclick="adj('r_sal',0.05)">+</button></div></div><div class="fld"><label>Nutrição / suplementação</label><div class="bw"><button class="bp" onclick="adj('r_nutri',-0.1)">−</button><input type="number" id="r_nutri" value="4.54" step="0.1" oninput="calc()"><button class="bp" onclick="adj('r_nutri',0.1)">+</button></div></div></div>
+        <div class="fg2"><div class="fld"><label>Sanidade</label><div class="bw"><button class="bp" onclick="adj('r_san',-0.05)">−</button><input type="number" id="r_san" value="0.15" step="0.05" oninput="calc()"><button class="bp" onclick="adj('r_san',0.05)">+</button></div></div><div class="fld"><label>Manutenção pastagens</label><div class="bw"><button class="bp" onclick="adj('r_past',-0.05)">−</button><input type="number" id="r_past" value="1.18" step="0.05" oninput="calc()"><button class="bp" onclick="adj('r_past',0.05)">+</button></div></div></div>
+        <div class="fg2"><div class="fld"><label>Manutenção estrutura</label><div class="bw"><button class="bp" onclick="adj('r_est',-0.05)">−</button><input type="number" id="r_est" value="0.17" step="0.05" oninput="calc()"><button class="bp" onclick="adj('r_est',0.05)">+</button></div></div><div class="fld"><label>Administrativo</label><div class="bw"><button class="bp" onclick="adj('r_adm',-0.05)">−</button><input type="number" id="r_adm" value="0.20" step="0.05" oninput="calc()"><button class="bp" onclick="adj('r_adm',0.05)">+</button></div></div></div>
+        <div class="fg2"><div class="fld"><label>Serviços profissionais</label><div class="bw"><button class="bp" onclick="adj('r_serv',-0.05)">−</button><input type="number" id="r_serv" value="0.38" step="0.05" oninput="calc()"><button class="bp" onclick="adj('r_serv',0.05)">+</button></div></div><div class="fld"><label>Arrendamento</label><div class="bw"><button class="bp" onclick="adj('r_arr',-0.1)">−</button><input type="number" id="r_arr" value="3.61" step="0.1" oninput="calc()"><button class="bp" onclick="adj('r_arr',0.1)">+</button></div></div></div>
+        <div class="fg2"><div class="fld"><label>Imprevistos / outros</label><div class="bw"><button class="bp" onclick="adj('r_imp',-0.05)">−</button><input type="number" id="r_imp" value="0.52" step="0.05" oninput="calc()"><button class="bp" onclick="adj('r_imp',0.05)">+</button></div></div><div class="fld"><label>Total</label><div class="ibox" style="margin:0;padding:9px 12px"><strong id="r_soma">—</strong></div></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="ct">Desempenho</div>
+        <div class="g3 kg">
+          <div class="kpi"><div class="kl">Peso entrada</div><div class="kv sm" id="rz_ent">—</div></div><div class="kpi"><div class="kl">Peso saída</div><div class="kv sm" id="rz_sai">—</div></div><div class="kpi"><div class="kl">GPV</div><div class="kv sm" id="rz_gpv">—</div></div>
+          <div class="kpi"><div class="kl">Período</div><div class="kv sm" id="rz_per">—</div></div><div class="kpi"><div class="kl">Custo/kg PV produzido</div><div class="kv sm" id="rz_ckg">—</div></div><div class="kpi"><div class="kl">Mortalidade</div><div class="kv sm" id="rz_mort">—</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Resultado / cabeça</div>
+        <div class="rw"><span class="rl">Receita venda magro</span><span class="rv" id="re_rec">—</span></div><div class="rw"><span class="rl">(−) Custo do bezerro</span><span class="rv" id="re_ent">—</span></div><div class="rw"><span class="rl">(−) Custos operacionais</span><span class="rv" id="re_op">—</span></div><div class="rw"><span class="rl">(−) Juros s/ capital</span><span class="rv" id="re_jur">—</span></div><div class="rw"><span class="rl">(−) Mortalidade</span><span class="rv" id="re_mor">—</span></div>
+        <div class="hr"></div>
+        <div class="g3">
+          <div class="kpi"><div class="kl">Lucro / cab</div><div class="kv lg" id="re_luc">—</div></div><div class="kpi"><div class="kl">Margem</div><div class="kv sm" id="re_mar">—</div></div><div class="kpi"><div class="kl">Retorno s/ bezerro (a.a.)</div><div class="kv sm" id="re_raa">—</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Impacto do GMD no lucro <span class="sub">no período da recria</span></div>
+        <div class="g4" id="r_igmd"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFINAMENTO -->
+<div id="pg-conf" class="pg">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="ct">Confinamento</div>
+        <div class="ibox" id="c_pinfo">—</div>
+        <div class="fg2"><div class="fld"><label>GMD (kg/dia)</label><div class="bw"><button class="bp" onclick="adj('c_gmd',-0.05)">−</button><input type="number" id="c_gmd" value="1.40" step="0.05" oninput="calc()"><button class="bp" onclick="adj('c_gmd',0.05)">+</button></div></div><div class="fld"><label>Dias de trato</label><div class="bw"><button class="bp" onclick="adj('c_dias',-5)">−</button><input type="number" id="c_dias" value="120" step="5" oninput="calc()"><button class="bp" onclick="adj('c_dias',5)">+</button></div></div></div>
+        <div class="fg2"><div class="fld"><label>Rend. carcaça entrada (%)</label><div class="bw"><button class="bp" onclick="adj('c_ri',-0.5)">−</button><input type="number" id="c_ri" value="50" step="0.5" oninput="calc()"><button class="bp" onclick="adj('c_ri',0.5)">+</button></div></div><div class="fld"><label>Rend. carcaça saída (%)</label><div class="bw"><button class="bp" onclick="adj('c_rf',-0.5)">−</button><input type="number" id="c_rf" value="56" step="0.5" oninput="calc()"><button class="bp" onclick="adj('c_rf',0.5)">+</button></div></div></div>
+        <div class="fg2"><div class="fld"><label>Consumo MS (kg/cab/dia)</label><div class="bw"><button class="bp" onclick="adj('c_ms',-0.5)">−</button><input type="number" id="c_ms" value="10.7" step="0.5" oninput="calc()"><button class="bp" onclick="adj('c_ms',0.5)">+</button></div></div><div class="fld"><label>Custo MS (US$/kg MS)</label><div class="bw"><button class="bp" onclick="adj('c_cms',-0.01)">−</button><input type="number" id="c_cms" value="0.22" step="0.01" oninput="calc()"><button class="bp" onclick="adj('c_cms',0.01)">+</button></div></div></div>
+        <div class="fld"><label>Dias pós-trato (frigorífico)</label><div class="bw"><button class="bp" onclick="adj('c_dfrig',-5)">−</button><input type="number" id="c_dfrig" value="30" step="5" oninput="calc()"><button class="bp" onclick="adj('c_dfrig',5)">+</button></div></div>
+      </div>
+      <div class="card">
+        <div class="ct">Operacional (US$/cab/dia) <span class="sub">total = soma dos itens</span></div>
+        <div class="fg2"><div class="fld"><label>Mão de obra</label><div class="bw"><button class="bp" onclick="adj('c_mdo',-0.01)">−</button><input type="number" id="c_mdo" value="0.15" step="0.01" oninput="calc()"><button class="bp" onclick="adj('c_mdo',0.01)">+</button></div></div><div class="fld"><label>Manutenção / energia</label><div class="bw"><button class="bp" onclick="adj('c_ene',-0.01)">−</button><input type="number" id="c_ene" value="0.10" step="0.01" oninput="calc()"><button class="bp" onclick="adj('c_ene',0.01)">+</button></div></div></div>
+        <div class="fg2"><div class="fld"><label>Administrativo</label><div class="bw"><button class="bp" onclick="adj('c_adm',-0.01)">−</button><input type="number" id="c_adm" value="0.07" step="0.01" oninput="calc()"><button class="bp" onclick="adj('c_adm',0.01)">+</button></div></div><div class="fld"><label>Total</label><div class="ibox" style="margin:0;padding:9px 12px"><strong id="c_soma">—</strong></div></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="ct">Desempenho</div>
+        <div class="g3 kg">
+          <div class="kpi"><div class="kl">Peso entrada</div><div class="kv sm" id="cz_ent">—</div></div><div class="kpi"><div class="kl">Peso saída vivo</div><div class="kv sm" id="cz_sai">—</div></div><div class="kpi"><div class="kl">Carcaça final</div><div class="kv sm" id="cz_car">—</div></div>
+          <div class="kpi"><div class="kl">Ganho carcaça</div><div class="kv sm" id="cz_gcarc">—</div></div><div class="kpi"><div class="kl">Ganho carc/dia</div><div class="kv sm" id="cz_gcd">—</div></div><div class="kpi"><div class="kl">Conv. (kgMS/kgGPV)</div><div class="kv sm" id="cz_con">—</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Resultado / cabeça</div>
+        <div class="rw"><span class="rl">Receita (carcaça × preço gordo)</span><span class="rv" id="ce_rec">—</span></div><div class="rw"><span class="rl">(−) Custo de entrada</span><span class="rv" id="ce_ent">—</span></div><div class="rw"><span class="rl">(−) Nutrição</span><span class="rv" id="ce_nut">—</span></div><div class="rw"><span class="rl">(−) Operacional</span><span class="rv" id="ce_op">—</span></div><div class="rw"><span class="rl">(−) Juros s/ capital</span><span class="rv" id="ce_jur">—</span></div><div class="rw"><span class="rl">(−) Mortalidade</span><span class="rv" id="ce_mor">—</span></div>
+        <div class="hr"></div>
+        <div class="g3">
+          <div class="kpi"><div class="kl">Lucro / cab</div><div class="kv lg" id="ce_luc">—</div></div><div class="kpi"><div class="kl">Margem</div><div class="kv sm" id="ce_mar">—</div></div><div class="kpi"><div class="kl">Custo/kg carc produzida</div><div class="kv sm" id="ce_ckg">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTADO -->
+<div id="pg-resultado" class="pg">
+  <div class="card">
+    <div class="ct">Resultado do ciclo completo / cabeça</div>
+    <div class="g3">
+      <div class="kpi"><div class="kl">Lucro recria</div><div class="kv md" id="rs_rec">—</div></div><div class="kpi"><div class="kl">Lucro confinamento</div><div class="kv md" id="rs_conf">—</div></div><div class="kpi"><div class="kl">Lucro do ciclo</div><div class="kv lg" id="rs_tot">—</div></div>
+    </div>
+    <div class="hr"></div>
+    <div class="g4">
+      <div class="kpi"><div class="kl">VPL</div><div class="kv sm" id="rs_vpl">—</div></div><div class="kpi"><div class="kl">TIR (a.a.)</div><div class="kv sm" id="rs_tir">—</div></div><div class="kpi"><div class="kl">Retorno s/ capital</div><div class="kv sm" id="rs_ret">—</div></div><div class="kpi"><div class="kl">Duração do ciclo</div><div class="kv sm" id="rs_dur">—</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Decisão — o que fazer com o animal após a recria?</div>
+    <div class="g3">
+      <div class="opt" id="op1"><div class="ot">1. Vender magro <span class="tag" id="op1t" style="display:none">melhor</span></div>
+        <div class="kpi"><div class="kl">Resultado / cab</div><div class="kv md" id="d1_luc">—</div></div><div class="kpi"><div class="kl">Capital liberado na hora</div><div class="kv sm" id="d1_cap">—</div></div><div class="kpi"><div class="kl">Ciclo encerra em</div><div class="kv sm" id="d1_dias">—</div></div></div>
+      <div class="opt" id="op2"><div class="ot">2. Confinar e vender gordo <span class="tag" id="op2t" style="display:none">melhor</span></div>
+        <div class="kpi"><div class="kl">Resultado / cab (recria + conf.)</div><div class="kv md" id="d2_tot">—</div></div><div class="kpi"><div class="kl">Adicional do confinamento</div><div class="kv sm" id="d2_luc">—</div></div><div class="kpi"><div class="kl">Capital imobilizado</div><div class="kv sm" id="d2_cap">—</div></div><div class="kpi"><div class="kl">Dias adicionais</div><div class="kv sm" id="d2_dias">—</div></div></div>
+      <div class="opt" id="op3"><div class="ot">3. Vender magro + prestar serviço <span class="tag" id="op3t" style="display:none">melhor</span></div>
+        <div class="fg2"><div class="fld"><label>Receita serviço (US$/dia)</label><div class="bw"><button class="bp" onclick="adj('d_rs',-0.05)">−</button><input type="number" id="d_rs" value="0.40" step="0.05" oninput="calc()"><button class="bp" onclick="adj('d_rs',0.05)">+</button></div></div><div class="fld"><label>Custo serviço (US$/dia)</label><div class="bw"><button class="bp" onclick="adj('d_cs',-0.05)">−</button><input type="number" id="d_cs" value="0.25" step="0.05" oninput="calc()"><button class="bp" onclick="adj('d_cs',0.05)">+</button></div></div></div>
+        <div class="fld"><label>Preço venda MS (US$/kg MS)</label><div class="bw"><button class="bp" onclick="adj('d_pms',-0.01)">−</button><input type="number" id="d_pms" value="0.25" step="0.01" oninput="calc()"><button class="bp" onclick="adj('d_pms',0.01)">+</button></div></div>
+        <div class="kpi"><div class="kl">Resultado / cab (recria + serviço)</div><div class="kv md" id="d3_tot">—</div></div><div class="kpi"><div class="kl">Adicional do serviço + MS</div><div class="kv sm" id="d3_add">—</div></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Break-even — confinar vs. prestar serviço</div>
+    <div class="g2">
+      <div>
+        <div class="bebox">
+          <div class="kl">Preço mínimo do gordo para confinar superar o serviço</div>
+          <div class="benum" id="d_be">—</div>
+          <div style="font-size:14px;color:var(--txt2)">Preço atual: <strong id="d_be_atual" style="color:var(--txt)">—</strong></div>
+        </div>
+        <div class="vbox" id="d_recbox"><div class="kv sm" id="d_rec">—</div></div>
+      </div>
+      <div>
+        <div class="shead c4"><span>Preço gordo</span><span class="r">Lucro confinar</span><span class="r">Serviço + MS</span><span class="r">Melhor</span></div>
+        <div id="d_sens"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Custo/kg de carcaça ao longo do ciclo</div>
+    <div class="fsteps" id="ck_flow"></div>
+    <div class="narr" id="ck_narr"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Fluxo de caixa / cabeça</div>
+    <div id="res_fluxo"></div>
+  </div>
+</div>
+
+</div>
+</div>
+<script>
+function vn(id){var e=document.getElementById(id);if(!e)return 0;return parseFloat(e.value)||0;}
+function el(id){return document.getElementById(id);}
+function st(id,t){var e=el(id);if(e)e.textContent=t;}
+function set(id,h){var e=el(id);if(e)e.innerHTML=h;}
+function money(n){return '$'+Math.abs(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function sgn(n){return(n>=0?'+':'-')+money(n);}
+function f(x,d){return x.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function pct(n,d){return f(n,d===undefined?2:d)+'%';}
+function cls(n){return n>=0?'gn':'rd';}
+function adj(id,step){var e=el(id);if(!e)return;var d=step.toString().split('.')[1];e.value=(parseFloat(e.value||0)+step).toFixed(d?d.length:0);calc();}
+function setv(id,txt,n,extra){var e=el(id);if(!e)return;e.textContent=txt;e.className='kv '+(extra||'sm')+(n===undefined?'':' '+cls(n));}
+
+var TITULOS={global:'Parâmetros Globais',bezerro:'Bezerro',recria:'Recria',conf:'Confinamento',resultado:'Resultado'};
+function nav(page){
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-pg')===page);});
+  var pg=el('pg-'+page);if(pg)pg.classList.add('active');
+  st('ptitle',TITULOS[page]||'');window.scrollTo(0,0);
+}
+function aplicarTema(t){document.documentElement.setAttribute('data-theme',t);st('btn_tema',t==='dark'?'☀️ Tema Claro':'🌙 Tema Escuro');}
+function toggleTema(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';aplicarTema(t);try{localStorage.setItem('rbciclo_tema',t);}catch(ex){}}
+function tipoChange(){
+  var tipo=el('g_tipo').value;
+  el('g_cf').style.display=(tipo==='proprio')?'none':'';
+  el('g_mf').style.display=(tipo==='misto')?'':'none';
+  calc();
+}
+
+var IIDS=['g_cambio','g_pg','g_juros','g_tma','g_mr','g_mc','g_tipo','g_misto','g_cdp','g_cdpr','g_cdf',
+  'b_raca','b_peso','b_pyg','b_frete','b_com','b_vet',
+  'r_gmd','r_dias','r_pv','r_sal','r_nutri','r_san','r_past','r_est','r_adm','r_serv','r_arr','r_imp',
+  'c_gmd','c_dias','c_ri','c_rf','c_ms','c_cms','c_dfrig','c_mdo','c_ene','c_adm',
+  'd_rs','d_cs','d_pms'];
+var CHAVE='rbciclo1';
+function salvar(){
+  var data={salvoEm:new Date().toISOString()};
+  IIDS.forEach(function(id){var e=el(id);if(e)data[id]=e.value;});
+  try{localStorage.setItem(CHAVE,JSON.stringify(data));}catch(ex){}
+  var hora=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  var s=el('hind');if(s){s.textContent='✓ Salvo '+hora;setTimeout(function(){s.textContent='';},3000);}
+  st('sfoot_txt','Salvo neste computador às '+hora);
+}
+function carregar(){
+  try{var t=localStorage.getItem('rbciclo_tema');if(t)aplicarTema(t);}catch(ex){}
+  var raw;try{raw=localStorage.getItem(CHAVE);}catch(ex){return;}
+  if(!raw)return;
+  try{
+    var data=JSON.parse(raw);
+    IIDS.forEach(function(id){var e=el(id);if(e&&data[id]!==undefined)e.value=data[id];});
+    if(data.salvoEm){var d=new Date(data.salvoEm);st('sfoot_txt','Salvo neste computador em '+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));}
+  }catch(ex){}
+}
+function resetar(){if(!confirm('Resetar valores?'))return;try{localStorage.removeItem(CHAVE);}catch(ex){}location.reload();}
+
+function barra(l,v,maxV,tot){
+  var pp=maxV>0?Math.min(Math.abs(v)/maxV*100,100):0;
+  return '<div class="flr"><span class="fll'+(tot?' ft':'')+'">'+l+'</span><div class="flb"><div class="fli '+(v>=0?'p':'n')+'" style="width:'+pp+'%">'+(pp>=14?sgn(v):'')+'</div></div><span class="flv '+cls(v)+'">'+sgn(v)+'</span></div>';
+}
+/* VPL e TIR de fluxos [{t:anos,v:valor}] */
+function vpl(fl,r){return fl.reduce(function(a,x){return a+x.v/Math.pow(1+r,x.t);},0);}
+function tir(fl){
+  var lo=-0.99,hi=10,flo=vpl(fl,lo),fhi=vpl(fl,hi);
+  if(!isFinite(flo)||!isFinite(fhi)||flo*fhi>0)return null;
+  for(var i=0;i<200;i++){var m=(lo+hi)/2,fm=vpl(fl,m);if(flo*fm<=0){hi=m;fhi=fm;}else{lo=m;flo=fm;}}
+  return (lo+hi)/2;
+}
+
+function calc(){
+  var cambio=vn('g_cambio')||1, jurosAA=vn('g_juros')/100, tma=vn('g_tma')/100;
+  var mortR=vn('g_mr')/100, mortC=vn('g_mc')/100, cPg=vn('g_pg');
+  var tipo=el('g_tipo').value, cRiF=vn('c_ri')/100, cRf=vn('c_rf')/100;
+
+  /* ---- Bezerro ---- */
+  var bPeso=vn('b_peso'),bPyg=vn('b_pyg'),bFrete=vn('b_frete'),bCom=vn('b_com'),bVet=vn('b_vet');
+  var bUsd=bPyg/cambio,bAnimal=bPeso*bUsd,bTotal=bAnimal+bFrete+bCom+bVet;
+  var bCarcEq=bPeso*cRiF,bCkgCarc=bCarcEq>0?bTotal/bCarcEq:0;
+  var bAgio=cPg>0?(bCkgCarc-cPg)/cPg*100:0;
+  st('b_usd',f(bUsd,3));
+  st('b_animal',money(bAnimal));st('b_of',money(bFrete));st('b_oc',money(bCom));st('b_ov',money(bVet));
+  st('b_total',money(bTotal));st('b_ckg',bPeso>0?money(bTotal/bPeso)+'/kg PV':'—');
+  var aLbl,aCls,aBox;
+  if(bAgio<=35){aLbl='Boa compra (até 35%)';aCls='ab-ok';aBox='pos';}
+  else if(bAgio<=50){aLbl='Atenção (35% a 50%)';aCls='ab-at';aBox='warn';}
+  else{aLbl='Perigo — ágio acima de 50%';aCls='ab-pe';aBox='neg';}
+  st('b_aval',(bAgio>0?'+':'')+pct(bAgio));el('b_aval').className='kv lg '+aCls;
+  st('b_albl',aLbl);el('b_albl').className=aCls;el('b_abox').className='abox '+aBox;
+  st('b_adet',money(bCkgCarc)+'/kg carc equiv. vs '+money(cPg)+'/kg gordo');
+
+  /* ---- Recria ---- */
+  var rGmd=vn('r_gmd'),rDias=vn('r_dias'),rPv=vn('r_pv');
+  var rCmes=['r_sal','r_nutri','r_san','r_past','r_est','r_adm','r_serv','r_arr','r_imp'].reduce(function(a,i){return a+vn(i);},0);
+  st('r_soma',money(rCmes)+'/cab/mês');
+  var rMeses=rDias/30.5,rPesoSai=bPeso+rGmd*rDias,rGpv=rPesoSai-bPeso;
+  var rCop=rCmes*rMeses,rJur=bTotal*jurosAA*(rDias/365),rMor=bTotal*mortR;
+  var rRec=rPesoSai*rPv,rCtot=bTotal+rCop+rJur+rMor,rLuc=rRec-rCtot;
+  var rMar=rRec>0?rLuc/rRec*100:0,rRoe=bTotal>0?rLuc/bTotal*100:0,rRoeAa=rDias>0?rRoe/(rDias/365):0;
+  var rCst=rCop+rJur+rMor,rCkg=rGpv>0?rCst/rGpv:0;
+  st('rz_ent',f(bPeso,1)+' kg');st('rz_sai',f(rPesoSai,1)+' kg');st('rz_gpv',f(rGpv,1)+' kg');
+  st('rz_per',rDias+' d · '+f(rMeses,1)+' meses');st('rz_ckg',money(rCkg)+'/kg');st('rz_mort',pct(mortR*100,1));
+  st('re_rec',money(rRec));st('re_ent',money(bTotal));st('re_op',money(rCop));st('re_jur',money(rJur));st('re_mor',money(rMor));
+  setv('re_luc',sgn(rLuc),rLuc,'lg');st('re_mar',pct(rMar));setv('re_raa',pct(rRoeAa),rRoeAa);
+  var ig='';
+  [10,20,30,50].forEach(function(g){var d=(g/1000)*rDias*rPv;ig+='<div class="kpi"><div class="kl">+'+g+' g/dia (+'+f(g/1000*rDias,1)+' kg)</div><div class="kv sm gn">+'+money(d)+'</div></div>';});
+  set('r_igmd',ig);
+
+  /* ---- Entrada do confinamento ---- */
+  var pp=tipo==='proprio'?1:tipo==='compra'?0:vn('g_misto')/100;
+  var cdPeso=vn('g_cdp'),cdCusto=cdPeso*vn('g_cdpr')+vn('g_cdf');
+  var cPesoIni=pp*rPesoSai+(1-pp)*cdPeso;
+  var cCustoEnt=pp*rRec+(1-pp)*cdCusto;
+  var info=tipo==='proprio'?'Entra o animal da recria: '+f(rPesoSai,1)+' kg, valorizado a '+money(rPv)+'/kg PV = '+money(rRec)+'/cab.'
+    :tipo==='compra'?'Entra recriado comprado: '+f(cdPeso,1)+' kg, custo '+money(cdCusto)+'/cab (o magro da recria é vendido).'
+    :'Mistura: '+pct(pp*100,0)+' próprio + '+pct((1-pp)*100,0)+' comprado → '+f(cPesoIni,1)+' kg, '+money(cCustoEnt)+'/cab.';
+  st('g_info',info);st('c_pinfo','Peso de entrada: '+f(cPesoIni,1)+' kg · custo de entrada '+money(cCustoEnt)+'/cab ('+(tipo==='proprio'?'próprio':tipo==='compra'?'compra direta':'misto')+' — definido no Global)');
+
+  /* ---- Confinamento ---- */
+  var cGmd=vn('c_gmd'),cDias=vn('c_dias'),cMs=vn('c_ms'),cCms=vn('c_cms'),cDfrig=vn('c_dfrig');
+  var cMan=vn('c_mdo')+vn('c_ene')+vn('c_adm');st('c_soma',money(cMan)+'/cab/dia');
+  var cPesoFim=cPesoIni+cGmd*cDias,cCarc=cPesoFim*cRf,cGanhoCarc=cCarc-cPesoIni*cRiF;
+  var cGcd=cDias>0?cGanhoCarc/cDias:0,cMst=cMs*cDias,cCon=(cPesoFim-cPesoIni)>0?cMst/(cPesoFim-cPesoIni):0;
+  var cNutri=cMs*cCms*cDias,cOp=cMan*cDias;
+  var cJur=cCustoEnt*jurosAA*((cDias+cDfrig)/365),cMor=cCustoEnt*mortC;
+  var cRec=cCarc*cPg,cCtot=cCustoEnt+cNutri+cOp+cJur+cMor,cLuc=cRec-cCtot;
+  var cMar=cRec>0?cLuc/cRec*100:0,cCst=cNutri+cOp+cJur+cMor,cCkg=cGanhoCarc>0?cCst/cGanhoCarc:0;
+  st('cz_ent',f(cPesoIni,1)+' kg');st('cz_sai',f(cPesoFim,1)+' kg');st('cz_car',f(cCarc,1)+' kg');
+  st('cz_gcarc',f(cGanhoCarc,1)+' kg');st('cz_gcd',f(cGcd*1000,0)+' g/dia');st('cz_con',f(cCon,2));
+  st('ce_rec',money(cRec));st('ce_ent',money(cCustoEnt));st('ce_nut',money(cNutri));st('ce_op',money(cOp));st('ce_jur',money(cJur));st('ce_mor',money(cMor));
+  setv('ce_luc',sgn(cLuc),cLuc,'lg');st('ce_mar',pct(cMar));st('ce_ckg',money(cCkg)+'/kg');
+
+  /* ---- Ciclo ---- */
+  var lucTot=rLuc+cLuc,totDias=rDias+cDias+cDfrig;
+  var aR=rDias/365,aC=totDias/365;
+  var fl=[{t:0,v:-bTotal},{t:aR,v:rRec-rCop-rMor-cCustoEnt},{t:aC,v:cRec-cNutri-cOp-cMor}];
+  var vplC=vpl(fl,tma),tirC=tir(fl);
+  var custoCiclo=bTotal+rCst+(cCustoEnt-rRec)+cCst;            /* custo total por cabeça terminada */
+  var capital=bTotal+rCop+rMor+Math.max(cCustoEnt-rRec,0)+cNutri+cOp+cMor; /* dinheiro colocado no ciclo */
+  var retCap=capital>0?lucTot/capital*100:0;
+  setv('rs_rec',sgn(rLuc),rLuc,'md');setv('rs_conf',sgn(cLuc),cLuc,'md');setv('rs_tot',sgn(lucTot),lucTot,'lg');
+  setv('rs_vpl',sgn(vplC)+' (TMA '+pct(tma*100,1)+')',vplC);
+  setv('rs_tir',tirC===null?'—':pct(tirC*100),tirC===null?undefined:(tirC-tma));
+  setv('rs_ret',pct(retCap),retCap);st('rs_dur',totDias+' dias · '+f(totDias/30.5,1)+' meses');
+
+  /* ---- Decisão ---- */
+  var dRs=vn('d_rs'),dCs=vn('d_cs'),dPms=vn('d_pms');
+  var dServ=(dRs-dCs)*cDias+(dPms-cCms)*cMs*cDias;
+  var op1=rLuc,op2=rLuc+cLuc,op3=rLuc+dServ;
+  var best=Math.max(op1,op2,op3);
+  setv('d1_luc',sgn(op1),op1,'md');st('d1_cap',money(rRec)+' em caixa');st('d1_dias',rDias+' dias');
+  setv('d2_tot',sgn(op2),op2,'md');setv('d2_luc',sgn(cLuc),cLuc);st('d2_cap',money(cCustoEnt)+' por mais '+(cDias+cDfrig)+' dias');st('d2_dias',(cDias+cDfrig)+' dias');
+  setv('d3_tot',sgn(op3),op3,'md');setv('d3_add',sgn(dServ),dServ);
+  [[op1,'op1'],[op2,'op2'],[op3,'op3']].forEach(function(o){var b=o[0]===best;el(o[1]).classList.toggle('best',b);el(o[1]+'t').style.display=b?'':'none';});
+  var dBe=cCarc>0?(cCtot+dServ)/cCarc:0, conf=cLuc>dServ;
+  st('d_be',money(dBe)+'/kg');st('d_be_atual',money(cPg)+'/kg carc');
+  el('d_recbox').className='vbox '+(conf?'pos':'warn');
+  st('d_rec',conf?'Ao preço atual, CONFINAR rende mais que prestar serviço':'Ao preço atual, PRESTAR SERVIÇO rende mais que confinar');
+  var sens=[-16,-12,-8,-4,0,4,8,12,16].map(function(p){var pg=cPg*(1+p/100);var l=cCarc*pg-cCtot;return {p:p,pg:pg,luc:l,mel:l>dServ?'Confinar':'Serviço'};});
+  var sH='';
+  sens.forEach(function(s){
+    sH+='<div class="srow c4'+(s.p===0?' base':'')+'"><span>'+money(s.pg)+' ('+(s.p>0?'+':'')+s.p+'%)</span><span class="r '+cls(s.luc)+'">'+sgn(s.luc)+'</span><span class="r '+cls(dServ)+'">'+sgn(dServ)+'</span><span class="r">'+s.mel+'</span></div>';
+  });
+  set('d_sens',sH);
+
+  /* ---- Custo/kg ao longo do ciclo ---- */
+  var ckBez=bCkgCarc;
+  var recCarc=rPesoSai*cRiF,ckRec=recCarc>0?(bTotal+rCst)/recCarc:0;
+  var ckFin=cCarc>0?custoCiclo/cCarc:0,ckMar=cPg-ckFin;
+  var steps=[
+    {l:'Compra do bezerro',v:ckBez,sb:f(bPeso,0)+' kg PV → '+f(bCarcEq,0)+' kg carc',nt:'Ágio '+(bAgio>0?'+':'')+pct(bAgio,0)},
+    {l:'Após a recria',v:ckRec,sb:f(rPesoSai,0)+' kg PV → '+f(recCarc,0)+' kg carc',nt:ckRec<=cPg?'Abaixo do preço do gordo':'Ainda acima do gordo'},
+    {l:'Após o confinamento',v:ckFin,sb:f(cPesoFim,0)+' kg PV → '+f(cCarc,0)+' kg carc',nt:'Custo total do ciclo'},
+    {l:'Preço de venda',v:cPg,sb:'gordo, US$/kg carcaça',nt:'Margem '+(ckMar>=0?'+':'-')+money(ckMar)+'/kg'}
+  ];
+  var fh='';
+  steps.forEach(function(s,i){
+    fh+='<div class="st"><div class="fbox"><div class="t">'+s.l+'</div><div class="v">'+money(s.v)+'</div><div class="u">/kg carc</div></div><div class="sb">'+s.sb+'</div><div class="nt">'+s.nt+'</div></div>';
+    if(i<steps.length-1)fh+='<div class="ar">→</div>';
+  });
+  set('ck_flow',fh);
+  var nar='O bezerro entra a '+money(ckBez)+'/kg de carcaça equivalente (ágio de '+pct(bAgio,0)+' sobre o gordo). ';
+  nar+='Depois da recria o custo acumulado fica em '+money(ckRec)+'/kg carc'+(ckRec<=cPg?', já abaixo':', ainda acima')+' do preço do gordo ('+money(cPg)+'). ';
+  nar+='O confinamento leva o custo final a '+money(ckFin)+'/kg carc, com '+(ckMar>=0?'margem':'prejuízo')+' de '+money(Math.abs(ckMar))+'/kg.';
+  st('ck_narr',nar);
+
+  /* ---- Fluxo de caixa (fecha com o lucro do ciclo) ---- */
+  var fx=[
+    {l:'Dia 0 — Compra do bezerro',v:-bTotal},
+    {l:'Recria — custos operacionais',v:-rCop},
+    {l:'Recria — mortalidade',v:-rMor},
+    {l:'Recria — juros s/ capital',v:-rJur}
+  ];
+  if(tipo!=='proprio') fx.push({l:'Dia '+rDias+' — Venda magro − compra recriado',v:rRec-cCustoEnt});
+  fx=fx.concat([
+    {l:'Confinamento — nutrição + operacional',v:-(cNutri+cOp)},
+    {l:'Confinamento — mortalidade',v:-cMor},
+    {l:'Confinamento — juros s/ capital',v:-cJur},
+    {l:'Dia '+totDias+' — Venda do gordo',v:cRec}
+  ]);
+  var maxF=Math.max.apply(null,fx.map(function(x){return Math.abs(x.v);}));
+  var fxh='';fx.forEach(function(x){fxh+=barra(x.l,x.v,maxF);});
+  fxh+='<div class="hr"></div>'+barra('Lucro do ciclo / cab',lucTot,maxF,true);
+  if(tipo==='proprio')fxh+='<div class="sub2" style="margin-top:8px">No dia '+rDias+' o magro passa da recria para o confinamento a '+money(rPv)+'/kg PV ('+money(rRec)+'/cab) — transferência interna, sem saída de caixa.</div>';
+  set('res_fluxo',fxh);
+
+  window.R={cambio:cambio,jurosAA:jurosAA,tma:tma,mortR:mortR,mortC:mortC,cPg:cPg,tipo:tipo,pp:pp,
+    raca:el('b_raca').value==='hibrido'?'Híbrido':'Zebu',bPeso:bPeso,bPyg:bPyg,bUsd:bUsd,bAnimal:bAnimal,bFrete:bFrete,bCom:bCom,bVet:bVet,bTotal:bTotal,bAgio:bAgio,aLbl:aLbl,bCkgCarc:bCkgCarc,
+    rGmd:rGmd,rDias:rDias,rPv:rPv,rCmes:rCmes,rPesoSai:rPesoSai,rGpv:rGpv,rCop:rCop,rJur:rJur,rMor:rMor,rRec:rRec,rLuc:rLuc,rMar:rMar,rRoeAa:rRoeAa,rCkg:rCkg,
+    cPesoIni:cPesoIni,cCustoEnt:cCustoEnt,cGmd:cGmd,cDias:cDias,cDfrig:cDfrig,cRf:cRf,cCarc:cCarc,cGanhoCarc:cGanhoCarc,cGcd:cGcd,cMs:cMs,cCms:cCms,cMan:cMan,cNutri:cNutri,cOp:cOp,cJur:cJur,cMor:cMor,cRec:cRec,cLuc:cLuc,cMar:cMar,cCkg:cCkg,
+    lucTot:lucTot,vpl:vplC,tir:tirC,retCap:retCap,totDias:totDias,ckFin:ckFin,ckMar:ckMar,ckRec:ckRec,
+    op1:op1,op2:op2,op3:op3,dServ:dServ,dBe:dBe,conf:conf,sens:sens,dRs:dRs,dCs:dCs,dPms:dPms};
+}
+
+function gerarPDF(){
+  if(!(window.jspdf&&window.jspdf.jsPDF)){alert('Não foi possível carregar o gerador de PDF. Verifique a conexão com a internet e tente novamente.');return;}
+  var R=window.R,doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+  var VERDE=[29,74,55],CINZA=[86,102,93],TXT=[27,42,34],FUNDO=[230,239,232],POS=[46,125,79],NEG=[179,52,63];
+  var W=210,M=14,y=0,agora=new Date();
+  function n(x,d){return x.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});}
+  function us(x){return (x<0?'-':'')+'US$ '+n(Math.abs(x),2);}
+  function sus(x){return (x>=0?'+':'-')+'US$ '+n(Math.abs(x),2);}
+  function pc(x,d){return n(x,d===undefined?2:d)+'%';}
+  var pgCab={};
+  function cabMini(){var pn=doc.internal.getCurrentPageInfo().pageNumber;if(pn===1||pgCab[pn])return;pgCab[pn]=1;doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor.apply(doc,VERDE);doc.text('RURAL BIOENERGIA S.A. — Simulação do Ciclo Completo (continuação)',M,18);doc.setDrawColor.apply(doc,VERDE);doc.setLineWidth(0.5);doc.line(M,21,W-M,21);}
+  function cab(){
+    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor.apply(doc,VERDE);doc.text('RURAL BIOENERGIA S.A.',M,18);
+    doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor.apply(doc,CINZA);doc.text('Simulação do Ciclo Completo — Bezerro, Recria e Confinamento',M,24.5);
+    doc.setFontSize(9.5);doc.text('Emitido em '+agora.toLocaleDateString('pt-BR')+' '+agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),W-M,18,{align:'right'});
+    doc.setDrawColor.apply(doc,VERDE);doc.setLineWidth(0.8);doc.line(M,28.5,W-M,28.5);y=36;
+  }
+  function titulo(t){if(y>262){doc.addPage();cabMini();y=30;}doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor.apply(doc,VERDE);doc.text(t,M,y);y+=2.5;}
+  var base={theme:'grid',styles:{font:'helvetica',fontSize:9,cellPadding:{top:1.0,bottom:1.0,left:2.5,right:2.5},textColor:TXT,lineColor:[210,216,208],lineWidth:0.2},
+    headStyles:{fillColor:VERDE,textColor:255,fontStyle:'bold'},columnStyles:{1:{halign:'right'}},margin:{top:28,left:M,right:M},didDrawPage:function(){cabMini();}};
+  function tabela(head,body,opt){doc.autoTable(Object.assign({},base,{startY:y,head:[head],body:body},opt||{}));return doc.lastAutoTable.finalY;}
+  function destaque(idx,val){return function(d){if(d.section==='body'&&idx.indexOf(d.row.index)>=0){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=FUNDO;if(d.column.index===1&&val!==undefined)d.cell.styles.textColor=val>=0?POS:NEG;}};}
+  var meia=(W-2*M-6)/2;
+  function lado(a,b){var y0=y;var ya=tabela(a.h,a.b,Object.assign({margin:{top:28,left:M,right:W-M-meia},tableWidth:meia},a.o||{}));y=y0;
+    var yb=tabela(b.h,b.b,Object.assign({margin:{top:28,left:M+meia+6,right:M},tableWidth:meia},b.o||{}));y=Math.max(ya,yb)+5;}
+  cab();
+
+  titulo('Parâmetros e bezerro');
+  var origem=R.tipo==='proprio'?'Próprio (saída da recria)':R.tipo==='compra'?'Compra direta':'Misto ('+pc(R.pp*100,0)+' próprio)';
+  lado({h:['Parâmetros','Valor'],b:[
+      ['Câmbio','G$ '+n(R.cambio,0)+' / US$'],['Preço do gordo',us(R.cPg)+'/kg carc'],['Juros / TMA',pc(R.jurosAA*100,1)+' / '+pc(R.tma*100,1)+' a.a.'],
+      ['Mortalidade recria / conf.',pc(R.mortR*100,1)+' / '+pc(R.mortC*100,1)],['Origem no confinamento',origem]]},
+    {h:['Bezerro','Valor'],b:[
+      ['Raça / peso',R.raca+' · '+n(R.bPeso,0)+' kg'],['Preço de compra','G$ '+n(R.bPyg,0)+' = US$ '+n(R.bUsd,3)+'/kg'],['Custo do animal',us(R.bAnimal)],
+      ['Frete + comissão + vet.',us(R.bFrete+R.bCom+R.bVet)],['Custo total de entrada',us(R.bTotal)],['Ágio s/ gordo',(R.bAgio>0?'+':'')+pc(R.bAgio)+' — '+R.aLbl.split(' (')[0]]],
+     o:{didParseCell:destaque([4])}});
+
+  titulo('Recria a pasto');
+  lado({h:['Desempenho','Valor'],b:[
+      ['Peso entrada / saída',n(R.bPeso,1)+' a '+n(R.rPesoSai,1)+' kg'],['GMD / período',n(R.rGmd,3)+' kg/dia · '+R.rDias+' dias'],['Ganho de peso (GPV)',n(R.rGpv,1)+' kg'],
+      ['Custo mensal',us(R.rCmes)+'/cab/mês'],['Custo/kg PV produzido',us(R.rCkg)],['Preço de venda do magro',us(R.rPv)+'/kg PV']]},
+    {h:['Econômico','US$/cab'],b:[
+      ['Receita',us(R.rRec)],['(-) Bezerro',us(R.bTotal)],['(-) Custos operacionais',us(R.rCop)],['(-) Juros s/ capital',us(R.rJur)],['(-) Mortalidade',us(R.rMor)],
+      ['Lucro / cabeça',sus(R.rLuc)],['Margem · retorno a.a.',pc(R.rMar)+' · '+pc(R.rRoeAa)]],o:{didParseCell:destaque([5],R.rLuc)}});
+
+  titulo('Confinamento');
+  lado({h:['Desempenho','Valor'],b:[
+      ['Peso entrada / saída',n(R.cPesoIni,1)+' a '+n(R.cPesoIni+R.cGmd*R.cDias,1)+' kg'],['GMD / dias',n(R.cGmd,2)+' kg/dia · '+R.cDias+' + '+R.cDfrig+' frig.'],
+      ['Rend. saída / carcaça',pc(R.cRf*100,1)+' · '+n(R.cCarc,1)+' kg'],['Ganho de carcaça',n(R.cGanhoCarc,1)+' kg · '+n(R.cGcd*1000,0)+' g/dia'],
+      ['MS / custo MS',n(R.cMs,1)+' kg/dia · '+us(R.cCms)+'/kg'],['Custo/kg carc produzida',us(R.cCkg)]]},
+    {h:['Econômico','US$/cab'],b:[
+      ['Receita',us(R.cRec)],['(-) Entrada',us(R.cCustoEnt)],['(-) Nutrição',us(R.cNutri)],['(-) Operacional',us(R.cOp)],['(-) Juros s/ capital',us(R.cJur)],['(-) Mortalidade',us(R.cMor)],
+      ['Lucro / cabeça',sus(R.cLuc)]],o:{didParseCell:destaque([6],R.cLuc)}});
+
+  titulo('Resultado do ciclo completo');
+  y=tabela(['Indicador','Valor'],[
+    ['Lucro recria + confinamento / cabeça',sus(R.lucTot)],
+    ['VPL (TMA '+pc(R.tma*100,1)+')',sus(R.vpl)],
+    ['TIR anual',R.tir===null?'—':pc(R.tir*100)],
+    ['Retorno s/ capital aplicado',pc(R.retCap)],
+    ['Custo final / margem por kg carcaça',us(R.ckFin)+' · margem '+sus(R.ckMar)],
+    ['Duração do ciclo',R.totDias+' dias ('+n(R.totDias/30.5,1)+' meses)']
+  ],{columnStyles:{0:{cellWidth:110},1:{halign:'right'}},didParseCell:destaque([0],R.lucTot)})+6;
+
+  titulo('Decisão após a recria');
+  var best=Math.max(R.op1,R.op2,R.op3);
+  y=tabela(['Opção','Resultado / cab','Observação'],[
+    ['1. Vender magro',sus(R.op1),'Capital liberado: '+us(R.rRec)],
+    ['2. Confinar e vender gordo',sus(R.op2),'Adicional do confinamento: '+sus(R.cLuc)],
+    ['3. Vender magro + serviço',sus(R.op3),'Serviço '+us(R.dRs)+' - '+us(R.dCs)+'/dia, MS a '+us(R.dPms)+'/kg: '+sus(R.dServ)]
+  ],{columnStyles:{1:{halign:'right'}},didParseCell:function(d){if(d.section!=='body')return;var v=[R.op1,R.op2,R.op3][d.row.index];if(v===best){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=FUNDO;}if(d.column.index===1)d.cell.styles.textColor=v>=0?POS:NEG;}})+5;
+  if(y>250){doc.addPage();cabMini();y=30;}
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor.apply(doc,TXT);
+  doc.text('Preço mínimo do gordo para confinar superar o serviço: ',M,y);
+  doc.setFont('helvetica','bold');doc.text(us(R.dBe)+'/kg carc',M+doc.getTextWidth('Preço mínimo do gordo para confinar superar o serviço: '),y);
+  y+=5;doc.setFont('helvetica','normal');doc.text('Preço atual: '+us(R.cPg)+'/kg carc — '+(R.conf?'confinar rende mais que o serviço.':'o serviço rende mais que confinar.'),M,y);y+=3;
+  var bi=R.sens.findIndex(function(s){return s.p===0;});
+  y=tabela(['Preço do gordo','Variação','Lucro confinar','Serviço + MS','Melhor'],R.sens.map(function(s){return [us(s.pg),(s.p>0?'+':'')+s.p+'%',sus(s.luc),sus(R.dServ),s.mel];}),
+    {columnStyles:{1:{halign:'center'},2:{halign:'right'},3:{halign:'right'},4:{halign:'center'}},
+     didParseCell:function(d){if(d.section!=='body')return;if(d.row.index===bi){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=FUNDO;}if(d.column.index===2)d.cell.styles.textColor=R.sens[d.row.index].luc>=0?POS:NEG;}});
+
+  var np=doc.internal.getNumberOfPages();
+  for(var i=1;i<=np;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor.apply(doc,CINZA);
+    doc.setDrawColor(210,216,208);doc.setLineWidth(0.2);doc.line(M,284,W-M,284);
+    doc.text('Rural Bioenergia S.A. · Simulação do ciclo completo — valores por cabeça em US$',M,289);doc.text('Página '+i+' de '+np,W-M,289,{align:'right'});}
+  doc.save('simulacao-ciclo-completo-'+agora.toISOString().slice(0,10)+'.pdf');
+}
+
+carregar();
+tipoChange();
+
+</script>
+</body>
+</html>
